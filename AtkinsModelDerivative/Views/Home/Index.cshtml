@@ -1,31 +1,190 @@
 ﻿@{
-    ViewBag.Title = "Home Page";
+    ViewBag.Title = "Atkins Forge Application";
 }
 
-<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
-</div>
+<!-- Header -->
+<header id="top" class="header">
+    <h1>Model Viewer</h1>
+    <div id="MyViewerDiv">
+    </div>
+</header>
 
-<div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
-        </p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+<!-- Services -->
+<!-- The circle icons use Font Awesome's stacked icon classes. For more information, visit http://fontawesome.io/examples/ -->
+<section id="services" class="services bg-primary">
+    <h1>Views</h1>
+</section>
+
+<!-- Portfolio -->
+<section id="portfolio" class="portfolio">
+    <div class="container">
+        <div class="row">
+            <h1>Elements</h1>
+            <table class="table table-condensed table-hover table-striped" id="Elements"> 
+            <thead> 
+                <tr> 
+                <th>Item Name</th> 
+                <th>Item Id</th> 
+                <th>Item Workset</th> 
+                <th>Item Category</th> 
+                </tr>
+            </thead> 
+            <tbody>
+
+            </tbody>
+            </table>
+        </div>
+        <!-- /.row -->
     </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
+    <!-- /.container -->
+</section>
+
+<!-- Map -->
+<section id="contact" class="map">
+    <h1>Dashboard</h1>
+    <div id="dashboard">
+        <h2>Bar Graph</h2>
+        <div id="bar"></div><hr />
+        <h2>Line Graph</h2>
+        <div id="line"></div><hr />
+        <h2>Donut Graph</h2>
+        <div id="donut"></div><hr />
     </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
+    <div class="row">
+        <footer>
+            <a id="to-top" href="#top" class="btn btn-dark btn-lg"><i class="fa fa-chevron-up fa-fw fa-1x"></i></a>
+            <p>&copy; @DateTime.Now.Year - Atkins Forge Application</p>
+        </footer>
     </div>
-</div>
+</section>
+
+<!-- /.container -->
+
+@section Scripts
+{
+    <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/three.min.js"></script>
+    <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/viewer3D.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+    <script src="~/Scripts/linq.min.js"></script>
+    <script src="~/Scripts/MetadataCollector.js"></script>
+
+    <!-- Developer JS -->
+    <script>
+            var viewer;
+            var options = {
+                env: 'AutodeskProduction',
+                accessToken: 'izkMlHGNslUFMGgUVRhfnacqdNVH'
+            };
+            var documentId = 'urn:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6YXRraW5zbW9kZWxidWNrZXQvQVRLUmV2aXQyMDE3LnJ2dA';
+            Autodesk.Viewing.Initializer(options, function onInitialized(){
+                Autodesk.Viewing.Document.load(documentId, onDocumentLoadSuccess, onDocumentLoadFailure);
+            });
+
+            /**
+            * Autodesk.Viewing.Document.load() success callback.
+            * Proceeds with model initialization.
+            */
+            function onDocumentLoadSuccess(doc) {
+
+                // A document contains references to 3D and 2D viewables.
+                var viewables = Autodesk.Viewing.Document.getSubItemsWithProperties(doc.getRootItem(), {'type':'geometry'}, true);
+                if (viewables.length === 0) {
+                    console.error('Document contains no viewables.');
+                    return;
+                }
+
+                // Choose any of the avialble viewables
+                var initialViewable = viewables[0];
+                var svfUrl = doc.getViewablePath(initialViewable);
+                var modelOptions = {
+                    sharedPropertyDbPath: doc.getPropertyDbPath()
+                };
+
+                var viewerDiv = document.getElementById('MyViewerDiv');
+                viewer = new Autodesk.Viewing.Private.GuiViewer3D(viewerDiv);
+                viewer.start(svfUrl, modelOptions, onLoadModelSuccess, onLoadModelError);
+            }
+
+            /**
+             * Autodesk.Viewing.Document.load() failuire callback.
+             */
+            function onDocumentLoadFailure(viewerErrorCode) {
+                console.error('onDocumentLoadFailure() - errorCode:' + viewerErrorCode);
+            }
+
+            /**
+             * viewer.loadModel() success callback.
+             * Invoked after the model's SVF has been initially loaded.
+             * It may trigger before any geometry has been downloaded and displayed on-screen.
+             */
+            function onLoadModelSuccess(model) {
+                console.log('onLoadModelSuccess()!');
+                console.log('Validate model loaded: ' + (viewer.model === model));
+                console.log(model);
+            }
+
+            /**
+             * viewer.loadModel() failure callback.
+             * Invoked when there's an error fetching the SVF file.
+             */
+            function onLoadModelError(viewerErrorCode) {
+                console.error('onLoadModelError() - errorCode:' + viewerErrorCode);
+            }
+
+
+    // Closes the sidebar menu
+    $("#menu-close").click(function(e) {
+        e.preventDefault();
+        $("#sidebar-wrapper").toggleClass("active");
+    });
+    // Opens the sidebar menu
+    $("#menu-toggle").click(function(e) {
+        e.preventDefault();
+        $("#sidebar-wrapper").toggleClass("active");
+    });
+    // Scrolls to the selected menu item on the page
+    $(function() {
+        $('a[href*=#]:not([href=#],[data-toggle],[data-target],[data-slide])').click(function() {
+            if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') || location.hostname == this.hostname) {
+                var target = $(this.hash);
+                target = target.length ? target : $('[name=' + this.hash.slice(1) + ']');
+                if (target.length) {
+                    $('html,body').animate({
+                        scrollTop: target.offset().top
+                    }, 1000);
+                    return false;
+                }
+            }
+        });
+    });
+    //#to-top button appears after scrolling
+    var fixed = false;
+    $(document).scroll(function() {
+        if ($(this).scrollTop() > 250) {
+            if (!fixed) {
+                fixed = true;
+                // $('#to-top').css({position:'fixed', display:'block'});
+                $('#to-top').show("slow", function() {
+                    $('#to-top').css({
+                        position: 'fixed',
+                        display: 'block'
+                    });
+                });
+            }
+        } else {
+            if (fixed) {
+                fixed = false;
+                $('#to-top').hide("slow", function() {
+                    $('#to-top').css({
+                        display: 'none'
+                    });
+                });
+            }
+        }
+    });
+    </script>
+
+}
+
+<!-- Custom Theme JavaScript -->
